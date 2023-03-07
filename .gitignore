@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/GoogleChrome/
+/WPy64-31090/
+/Python/
+/GoogleChromeDriver/
+/coletar.py
+/.project
+/.pydevproject
+/ListaRIP.csv
+.settings/
