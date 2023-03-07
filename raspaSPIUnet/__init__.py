@@ -5,6 +5,8 @@ import csv
 import time
 from bs4                               import BeautifulSoup
 from datetime                          import datetime
+from os.path                           import join
+from pathlib                           import Path
 from selenium                          import webdriver
 from selenium.common.exceptions        import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -12,6 +14,8 @@ from selenium.webdriver.common.by      import By
 from selenium.webdriver.support.ui     import WebDriverWait
 from selenium.webdriver.support        import expected_conditions
 from urllib.parse                      import urlparse, urlunparse
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 class Perfil():
     """Perfil do Raspador para SPIUnet.
@@ -46,7 +50,7 @@ class Perfil():
     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
     }
     
-    def __init__(self, usuario, senha, arquivo = '', campos = '*', qtdPg = 1, headers = self.HEADERS, params = {}, urls_csv = ''):
+    def __init__(self, usuario, senha, arquivo = '', campos = '*', qtdPg = 1, headers = HEADERS, params = {}, urls_csv = ''):
         self.url      = "http://spiunet.spu.planejamento.gov.br/consulta/Cons_Utilizacao.asp?NU_RIP={}"
         self.usuario  = usuario
         self.senha    = senha
@@ -141,7 +145,14 @@ class Raspador():
         self.options          = Options()
         self.options.headless = True
         self.options.add_argument("--window-size=1024,768")
-        self.engine_path      = '../GoogleChromeDriver/chromedriver'
+        self.options.add_argument('--no-sandbox')
+        self.options.add_argument('--no-default-browser-check')
+        self.options.add_argument('--no-first-run')
+        self.options.add_argument('--disable-gpu')
+        self.options.add_argument('--disable-extensions')
+        self.options.add_argument('--disable-default-apps')
+        self.options.binary_location = join(BASE_DIR, 'GoogleChrome', 'App', 'Chrome-bin', 'chrome.exe')
+        self.engine_path      = join(BASE_DIR, 'GoogleChromeDriver', 'chromedriver.exe')
         self.engine           = webdriver.Chrome(options=self.options, executable_path=self.engine_path)
         print("{0} - Iniciando login no SPIUnet.".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         self.engine.get(self.SPIUnet_URL_BASE)
