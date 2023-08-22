@@ -14,6 +14,7 @@ from selenium.webdriver.common.by      import By
 from selenium.webdriver.support.ui     import WebDriverWait
 from selenium.webdriver.support        import expected_conditions
 from urllib.parse                      import urlparse, urlunparse
+import platform
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,7 +32,7 @@ class Perfil():
     
     headers: para a requisicao da web."""
     
-    CAMPOS = ['Terreno', 'Benfeitoria', 'Data', 'Tipo']
+    CAMPOS = ['RIPI', 'Logradouro', 'Numero', 'TerrenoAreaI', 'ConstruidaAreaI', 'RIPU', 'TerrenoAreaU', 'ConstruidaAreaU', 'Tipo', 'AvaliacaoData', 'TerrenoValor', 'BenfeitoriasValor']
     ESPERA = '//body'
     PARSERS = ['html.parser',]
     HEADERS  = {
@@ -106,24 +107,104 @@ class Perfil():
         result = []
         dado_r = {}
         if page.find('font', string='Msg: 0017 - RIP não cadastrado.'):
-            dado_r['Terreno'] = dado_r['Benfeitoria'] = dado_r['Data'] = dado_r['Tipo'] = ''
+            dado_r['RIPI'] = dado_r['Logradouro'] = dado_r['Numero'] = dado_r['TerrenoAreaI'] = dado_r['ConstruidaAreaI'] = dado_r['RIPU'] = dado_r['TerrenoAreaU'] = dado_r['ConstruidaAreaU'] = dado_r['Tipo'] = dado_r['AvaliacaoData'] = dado_r['TerrenoValor'] = dado_r['BenfeitoriasValor'] = ''
         else:
-            if 'Terreno' in self.campos:
-                terreno           = self.safe_text(page.find(text='Valor do Terreno (R$):').find_parent().find_parent().findNextSibling().font.b.text)
-                dado_r['Terreno'] = terreno
+            if 'RIPI' in self.campos:
+                RIPI = page.find(text='Rip:')
+                if RIPI is None:
+                    RIPI = ''
+                else:
+                    RIPI = self.safe_text(RIPI.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['RIPI'] = RIPI
             
-            if 'Benfeitoria' in self.campos:
-                benfeitoria       = self.safe_text(page.find(text='Valor Benfeitorias Utilizações (R$):').find_parent().find_parent().findNextSibling().font.b.text)
-                dado_r['Benfeitoria'] = benfeitoria
+            if 'Logradouro' in self.campos:
+                logradouro = page.find(text='Logradouro:')
+                if logradouro is None:
+                    logradouro = ''
+                else:
+                    logradouro = self.safe_text(logradouro.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['Logradouro'] = logradouro
             
-            if 'Data' in self.campos:
-                data      = self.safe_text(page.find(text='Data Avaliação:').find_parent().find_parent().findNextSibling().font.b.text)
-                dado_r['Data'] = data
+            if 'Numero' in self.campos:
+                numero = page.find(text='Número:')
+                if numero is None:
+                    numero = ''
+                else:
+                    numero = self.safe_text(numero.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['Numero'] = numero
+            
+            if 'TerrenoAreaI' in self.campos:
+                TerrenoAreaI = page.find(text="""Área
+                  Terreno (m²):""")
+                if TerrenoAreaI is None:
+                    TerrenoAreaI = ''
+                else:
+                    TerrenoAreaI = self.safe_text(TerrenoAreaI.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['TerrenoAreaI'] = TerrenoAreaI
+            
+            if ('ConstruidaAreaI' or 'ConstruidaAreaU') in self.campos:
+                ConstruidaAreas = page.findAll(text='Área Construída (m²):')
+                ConstruidaAreaI = ConstruidaAreaU = ''
+                for area in ConstruidaAreas:
+                    try:
+                        ConstruidaAreaI = self.safe_text(area.find_parent().find_parent().findNextSibling().font.b.text)
+                    except:
+                        ConstruidaAreaU = self.safe_text(area.find_parent().find_parent().find_parent().findNextSibling().font.b.text)
+                
+                if 'ConstruidaAreaI' in self.campos:
+                    dado_r['ConstruidaAreaI'] = ConstruidaAreaI
+                
+                if 'ConstruidaAreaU' in self.campos:
+                    dado_r['ConstruidaAreaU'] = ConstruidaAreaU
+                
+            if 'RIPU' in self.campos:
+                RIPU = page.find(text='RIP Utilização:')
+                if RIPU is None:
+                    RIPU = ''
+                else:
+                    RIPU = self.safe_text(RIPU.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['RIPU'] = RIPU
+            
+            if 'TerrenoAreaU' in self.campos:
+                TerrenoAreaU = page.find(text='Área Terreno Utilizada (m²):')
+                if TerrenoAreaU is None:
+                    TerrenoAreaU = ''
+                else:
+                    TerrenoAreaU = self.safe_text(TerrenoAreaU.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['TerrenoAreaU'] = TerrenoAreaU
             
             if 'Tipo' in self.campos:
-                tipo           = self.safe_text(page.find(text='Tipo do Imóvel:').find_parent().find_parent().findNextSibling().font.b.text)
+                tipo = page.find(text='Tipo do Imóvel:')
+                if tipo is None:
+                    tipo = ''
+                else:
+                    tipo = self.safe_text(tipo.find_parent().find_parent().findNextSibling().font.b.text)
                 dado_r['Tipo'] = tipo
-        
+            
+            if 'AvaliacaoData' in self.campos:
+                data = page.find(text='Data Avaliação:')
+                if data is None:
+                    data = ''
+                else:
+                    data = self.safe_text(data.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['AvaliacaoData'] = data
+            
+            if 'TerrenoValor' in self.campos:
+                terreno = page.find(text='Valor do Terreno (R$):')
+                if terreno is None:
+                    terreno = ''
+                else:
+                    terreno = self.safe_text(terreno.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['TerrenoValor'] = terreno
+            
+            if 'BenfeitoriasValor' in self.campos:
+                benfeitoria = page.find(text='Valor Benfeitorias Utilizações (R$):')
+                if benfeitoria is None:
+                    benfeitoria = ''
+                else:
+                    benfeitoria = self.safe_text(benfeitoria.find_parent().find_parent().findNextSibling().font.b.text)
+                dado_r['BenfeitoriasValor'] = benfeitoria
+            
         result.append(dado_r)
         return result
     
@@ -144,15 +225,21 @@ class Raspador():
         self.contador         = 1
         self.options          = Options()
         self.options.headless = True
-        self.options.add_argument("--window-size=1024,768")
         self.options.add_argument('--no-sandbox')
+        self.options.add_argument('--disable-dev-shm-usage')
         self.options.add_argument('--no-default-browser-check')
         self.options.add_argument('--no-first-run')
         self.options.add_argument('--disable-gpu')
         self.options.add_argument('--disable-extensions')
         self.options.add_argument('--disable-default-apps')
-        self.options.binary_location = join(BASE_DIR, 'GoogleChrome', 'App', 'Chrome-bin', 'chrome.exe')
-        self.engine_path      = join(BASE_DIR, 'GoogleChromeDriver', 'chromedriver.exe')
+        self.options.add_argument("--window-size=1024,768")
+        if platform.system() == "Windows":
+            self.options.binary_location = join(BASE_DIR, 'GoogleChrome', 'App', 'Chrome-bin', 'chrome.exe')
+            self.engine_path             = join(BASE_DIR, 'GoogleChromeDriver', 'chromedriver.exe')
+        else:
+            self.options.binary_location = '/opt/google/chrome/chrome'
+            self.engine_path             = join(BASE_DIR, 'GoogleChromeDriver', 'chromedriver')
+        
         self.engine           = webdriver.Chrome(options=self.options, executable_path=self.engine_path)
         print("{0} - Iniciando login no SPIUnet.".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         self.engine.get(self.SPIUnet_URL_BASE)
@@ -186,8 +273,8 @@ class Raspador():
         self.data = []
         
         if self.profile.arquivo:
-            with open(self.profile.arquivo, 'w') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames = self.profile.campos)
+            with open(self.profile.arquivo, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames = ['RIP',]+self.profile.campos)
                 writer.writeheader()
         
         arquivo = open(self.profile.urls_csv, 'r')
@@ -213,16 +300,21 @@ class Raspador():
             
             if self.engine.current_url == self.SPIUnet_URL_BASE:
                 self.engine.switch_to.frame("Principal")
-                print('FRAME')
+                # print('FRAME')
             self.pages.append(BeautifulSoup(self.engine.page_source, self.profile.parser))
+            # TODO
+            # teste = self.profile.get_data(self.pages[-1], self.profile.url_base)[0]
+            # teste = ['RIP'] = url['RIP']
+            # print(teste)
             rows = self.profile.get_data(self.pages[-1], self.profile.url_base)
+            rows[0]['RIP'] = str(url['RIP'])
+            # print(rows)
             self.data.extend(rows)
-            
             if self.profile.arquivo:
-                with open(self.profile.arquivo, 'a') as csvfile:
-                    writer = csv.DictWriter(csvfile, fieldnames = self.profile.campos)
+                with open(self.profile.arquivo, 'a', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames = ['RIP',]+self.profile.campos)
                     writer.writerows(rows)
-            print("{0} - {1} {2} - Raspado. Elapsed time: {3}.".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), self.profile.tipo, url['RIP'], (datetime.now() - dt_pg)))
+            print("{0} - {1} {2} - Raspado. Tempo decorrido: {3}.".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), self.profile.tipo, url['RIP'], (datetime.now() - dt_pg)))
             
             self.contador += 1
             

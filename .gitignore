@@ -136,3 +136,7 @@ dmypy.json
 /.pydevproject
 /ListaRIP.csv
 .settings/
+/resultado.csv
+/ListaRIP-CADIMA.csv
+/CADIMAxSPIUnet.xlsx
+/CADIMAxSPIUnet.ods
